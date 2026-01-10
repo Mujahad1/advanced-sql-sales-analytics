@@ -97,13 +97,46 @@ WHERE order_date IS NOT NULL
 GROUP BY DATETRUNC(YEAR,order_date)
 ) t
 
-#performance Analysis
-Comaparing the current measure to a target measure
-TASK:
-Analyze the yearly performance of products
-by comparing each product's sales to both
-its average sales performance and the previous year's sales.
+--Performance Analysis
+--Comaparing the current measure to a target measure
 
+--Analyze the yearly performance of products
+--by comparing each product's sales to both
+--its average sales performance and the previous year's sales.
+
+--Analyze the yearly performance of products
+--by comparing each product's sales to both
+--its average sales performance and the previous year's sales.
+
+WITH totals AS
+(
+SELECT 
+    year(f.order_date) order_year,
+    p.product_name,
+    sum(f.sales_amount) as current_sales
+FROM [dbo].[gold.fact_sales] f
+LEFT JOIN [dbo].[dim.products] p
+ON f.product_key=p.product_key
+WHERE order_date IS NOT NULL
+GROUP BY year(order_date),product_name
+)
+SELECT 
+      order_year,
+      product_name,
+      current_sales,
+      AVG(current_sales) over(partition by product_name) as avg_sales,
+      current_sales-AVG(current_sales) over (partition by product_name) as diff_avg,
+      case when current_sales-AVG(current_sales) over (partition by product_name) < 0 then 'Below_avg'
+           when current_sales-AVG(current_sales) over (partition by product_name) > 0 then 'Abv_avg'
+      END avg_change ,
+      LAG(current_sales) over (partition by product_name order by order_year) py_sales,
+      current_sales-LAG(current_sales) over (partition by product_name order by order_year) diff_sales,
+      case when current_sales-LAG(current_sales) over (partition by product_name order by order_year) < 0 then 'Decreasing'
+           when current_sales-LAG(current_sales) over (partition by product_name order by order_year) > 0 then 'Increasing'
+      ELSE 'No Change'
+      END sales_change
+FROM totals
+order by product_name,order_year
 
 
 
