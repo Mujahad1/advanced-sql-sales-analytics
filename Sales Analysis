@@ -1,4 +1,112 @@
 #change in trend/time
+--Change Over Time
+--ANALYSE HOW A MEASURE EVOLVES OVER TIME
+--HELPS TRACK TRENDS AND IDENTIFY SEAASONALITY IN YOUR DATA
+
+SELECT 
+	order_date ,
+	sum(sales_amount) AS total_sales,
+	sum(quantity) AS total_quantity
+FROM [dbo].[gold.fact_sales]
+WHERE order_date IS NOT NULL
+GROUP BY order_date
+
+
+--Using year and Month 
+SELECT
+    YEAR(order_date) as order_year,
+	Month(order_date) AS order_month,
+	sum(sales_amount) as total_sales,
+	count(DISTINCT customer_key) as total_customers,
+	SUM(quantity) as total_quantity
+FROM [dbo].[gold.fact_sales]
+WHERE order_date is not null
+GROUP BY Year(order_date) ,MONTH(order_date)
+ORDER BY Year(order_date) ,MONTH(order_date)
+
+--Using format
+SELECT
+    FORMAT(order_date,'yyyy-MMM') as order_month,
+	sum(sales_amount) as total_sales,
+	count(DISTINCT customer_key) as total_customers,
+	SUM(quantity) as total_quantity
+FROM [dbo].[gold.fact_sales]
+WHERE order_date is not null
+GROUP BY FORMAT(order_date,'yyyy-MMM') 
+ORDER BY FORMAT(order_date,'yyyy-MMM') 
+
+USING DATETRUNC
+SELECT
+	DATETRUNC(YEAR,order_date) as order_month,
+	sum(sales_amount) AS total_sales,
+	count( DIStinct customer_key) as total_customers,
+	sum(quantity) AS total_quantity
+	from [dbo].[gold.fact_sales]
+	where order_date is not null
+	group by DATETRUNC(Year,order_date)
+	order by DATETRUNC(YEAR,order_date)
+
+--Cumulative Analysis
+
+Aggregrate the data progressively over the time
+Helps to understand whether our Business is growing or declining
+TASK :
+Calculate the total sales per month and the running total of sales over time
+
+SELECT 
+	order_month,
+	total_sales,
+	sum(total_sales) over (order by order_month) AS running_total
+FROM
+(SELECT 
+	DATETRUNC(MONTH,order_date) AS order_month,
+	SUM(sales_amount) AS total_sales
+FROM [dbo].[gold.fact_sales]
+WHERE order_date IS NOT NULL
+GROUP BY DATETRUNC(MONTH,order_date)
+) t
+
+
+##USING PARTITION BY WINDOW FUNCTION
+SELECT
+    order_month,
+    total_sales,
+    sum(total_sales) over (partition by order_month order by order_month) AS running_total
+FROM
+(SELECT
+    DATETRUNC(MONTH, order_date) AS order_month,
+    SUM(sales_amount) AS total_sales
+FROM [dbo].[gold.fact_sales]
+WHERE order_date IS NOT NULL
+GROUP BY DATETRUNC(MONTH, order_date)
+) t
+
+##running total with moving average
+SELECT 
+	order_month,
+	total_sales,
+	sum(total_sales) over (order by order_month) AS running_total,
+	AVG(avg_price) over (order by order_month) AS moving_avg
+FROM
+(SELECT 
+	DATETRUNC(YEAR,order_date) AS order_month,
+	SUM(sales_amount) AS total_sales,
+	AVG(price) As avg_price
+FROM [dbo].[gold.fact_sales]
+WHERE order_date IS NOT NULL
+GROUP BY DATETRUNC(YEAR,order_date)
+) t
+
+#performance Analysis
+Comaparing the current measure to a target measure
+TASK:
+Analyze the yearly performance of products
+by comparing each product's sales to both
+its average sales performance and the previous year's sales.
+
+
+
+
 #part to whole
 with totals as (
 select
