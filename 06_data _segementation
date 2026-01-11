@@ -1,0 +1,28 @@
+WITH segements AS  
+(
+SELECT 
+	c.customer_key,
+	sum(f.sales_amount) as total_sales,
+	MIN(order_date) AS first_order_date,
+	MAX(order_date) AS last_order_date,
+	datediff(month,min(order_date),max(order_date)) AS lifespan
+from [dbo].[gold.fact_sales] f
+left join [dbo].[dim.customers] c
+on f.customer_key=c.customer_key
+group by c.customer_key
+)
+SELECT
+	cust_segements,
+	count(customer_key) total_customer
+FROM(
+SELECT 
+   customer_key,
+   total_sales,
+   lifespan,
+   CASE WHEN total_sales >5000 AND lifespan>=12 then 'VIP'
+        WHEN total_sales <=5000  AND lifespan>=12 then 'Regular_customer'
+        ELSE 'NEW'
+   END cust_segements
+   from segements)t
+   group by cust_segements
+   order by total_Customer DESC
