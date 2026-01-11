@@ -85,5 +85,3 @@ This project addresses these questions using structured SQL analysis.
 - Leveraged window functions to ensure scalable analytics
 
 ---
-
-## Repository Structure
