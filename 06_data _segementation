@@ -1,3 +1,10 @@
+-- =====================================================
+-- Customer Segmentation Analysis
+-- Objective:
+-- Classify customers based on total sales value and
+-- purchasing lifespan (VIP, Regular, New)
+-- =====================================================
+
 WITH segements AS  
 (
 SELECT 
